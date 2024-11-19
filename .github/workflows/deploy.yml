@@ -3,7 +3,7 @@ name: Deploy Docker container to EC2
 on:
   push:
     branches:
-      - master  # master 브랜치에 커밋이 발생할 때 트리거
+      - main  # main 브랜치에 커밋이 발생할 때 트리거
 
 jobs:
   deploy:
