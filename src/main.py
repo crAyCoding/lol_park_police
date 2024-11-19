@@ -4,6 +4,7 @@ from discord.ext import commands
 from bot import bot
 from dotenv import load_dotenv
 from lolpark_warnings import server_warning, game_warning
+import database
 
 # 테스트 할때 아래 사용
 load_dotenv()
@@ -87,6 +88,7 @@ async def shutdown(ctx):
 
 
 def main() -> None:
+    database.create_table()
     bot.run(token=TOKEN)
 
 
