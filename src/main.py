@@ -18,36 +18,70 @@ async def on_ready():
 
 
 @bot.command(name='서버경고')
+@commands.has_role("관리자")
 @commands.has_permissions(manage_roles=True)
 async def command_server_warning(ctx, member: discord.Member = None):
     await ctx.message.delete()
     if not member:
         return
     num_of_warnings = await server_warning(ctx, member)
+    if num_of_warnings == 3:
+        await ctx.send(f"{member.mention}님에게 서버 경고가 부여되었습니다.\n"
+                       f"누적 서버 경고 : {num_of_warnings}회\n"
+                       f"처분 : 서버 추방 및 재입장 불가")
+        return
+
     role = discord.utils.get(ctx.guild.roles, name=f'server {num_of_warnings}')
+    # 내전경고 횟수에 따른 처분 목록
+    punishment = f'타임아웃 7일'
+    
+    if num_of_warnings == 2:
+        punishment = f'타임아웃 14일'
+
     try:
         # 역할 부여
         await member.add_roles(role)
         await ctx.send(f"{member.mention}님에게 서버 경고가 부여되었습니다.\n"
-                       f"누적 서버 경고 : {num_of_warnings}회")
+                       f"누적 서버 경고 : {num_of_warnings}회\n"
+                       f"처분 : {punishment}")
     except Exception as e:
         print('오류 발생')
     return
 
 
 @bot.command(name='내전경고')
+@commands.has_role("관리자")
 @commands.has_permissions(manage_roles=True)
 async def command_game_warning(ctx, member: discord.Member = None):
     await ctx.message.delete()
     if not member:
         return
     num_of_warnings = await game_warning(ctx, member)
+
+    if num_of_warnings == 5:
+        await ctx.send(f"{member.mention}님에게 내전 경고가 부여되었습니다.\n"
+                       f"누적 내전 경고 : {num_of_warnings}회\n"
+                       f"처분 : 서버 추방 및 재입장 불가")
+        return
+
     role = discord.utils.get(ctx.guild.roles, name=f'game {num_of_warnings}')
+    # 내전경고 횟수에 따른 처분 목록
+    punishment = f'구두경고'
+    
+    if num_of_warnings == 2:
+        punishment = f'내전 참여금지 3일, 타임아웃 1일'
+    if num_of_warnings == 3:
+        punishment = f'타임아웃 7일'
+    if num_of_warnings == 4:
+        punishment = f'타임아웃 14일'
+
     try:
         # 역할 부여
         await member.add_roles(role)
         await ctx.send(f"{member.mention}님에게 내전 경고가 부여되었습니다.\n"
-                       f"누적 내전 경고 : {num_of_warnings}회")
+                       f"누적 내전 경고 : {num_of_warnings}회\n"
+                       f"처분 : {punishment}")
+
     except Exception as e:
         print('오류 발생')
     return
