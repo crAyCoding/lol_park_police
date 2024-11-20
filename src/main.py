@@ -5,6 +5,7 @@ from bot import bot
 from dotenv import load_dotenv
 from lolpark_warnings import server_warning, game_warning
 import database
+import channels
 
 # 테스트 할때 아래 사용
 load_dotenv()
@@ -22,8 +23,16 @@ async def on_ready():
 @commands.has_permissions(manage_roles=True)
 async def command_server_warning(ctx, member: discord.Member = None):
     await ctx.message.delete()
+
+    # 언급 멤버가 없으면 무시
     if not member:
         return
+    
+    # 정해진 채팅 채널이 아닌 경우 무시
+    channel_id = ctx.channel.id
+    if channel_id != channels.PUNISHMENT_CHANNEL_ID and channel_id != channels.TEST_ID:
+        return
+    
     num_of_warnings = await server_warning(ctx, member)
     if num_of_warnings == 3:
         await ctx.send(f"{member.mention}님에게 서버 경고가 부여되었습니다.\n"
@@ -54,8 +63,16 @@ async def command_server_warning(ctx, member: discord.Member = None):
 @commands.has_permissions(manage_roles=True)
 async def command_game_warning(ctx, member: discord.Member = None):
     await ctx.message.delete()
+
+    # 언급 멤버가 없으면 무시
     if not member:
         return
+    
+    # 정해진 채팅 채널이 아닌 경우 무시
+    channel_id = ctx.channel.id
+    if channel_id != channels.PUNISHMENT_CHANNEL_ID and channel_id != channels.TEST_ID:
+        return
+    
     num_of_warnings = await game_warning(ctx, member)
 
     if num_of_warnings == 5:
@@ -95,6 +112,8 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
+
+
     await bot.process_commands(message)
 
 
@@ -103,7 +122,6 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     # CommandNotFound 에러는 무시
     if isinstance(error, commands.CommandNotFound):
-        print(f'없는 명령어입니다.')
         pass  # 아무 작업도 하지 않음
     else:
         # 다른 에러는 콘솔에 출력
