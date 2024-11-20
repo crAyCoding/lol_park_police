@@ -75,7 +75,7 @@ async def add_server_warning(member):
         conn.close()
 
 
-# 내전 경고 1회 추가
+# 게임 경고 1회 추가
 async def add_game_warning(member):
     conn = sqlite3.connect(warnings_db)
     db = conn.cursor()

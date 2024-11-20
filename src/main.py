@@ -58,7 +58,7 @@ async def command_server_warning(ctx, member: discord.Member = None):
     return
 
 
-@bot.command(name='내전경고')
+@bot.command(name='게임경고')
 @commands.has_role("관리자")
 @commands.has_permissions(manage_roles=True)
 async def command_game_warning(ctx, member: discord.Member = None):
@@ -76,13 +76,13 @@ async def command_game_warning(ctx, member: discord.Member = None):
     num_of_warnings = await game_warning(ctx, member)
 
     if num_of_warnings == 5:
-        await ctx.send(f"{member.mention}님에게 내전 경고가 부여되었습니다.\n"
-                       f"누적 내전 경고 : {num_of_warnings}회\n"
+        await ctx.send(f"{member.mention}님에게 게임 경고가 부여되었습니다.\n"
+                       f"누적 게임 경고 : {num_of_warnings}회\n"
                        f"처분 : 서버 추방 및 재입장 불가")
         return
 
     role = discord.utils.get(ctx.guild.roles, name=f'game {num_of_warnings}')
-    # 내전경고 횟수에 따른 처분 목록
+    # 게임경고 횟수에 따른 처분 목록
     punishment = f'구두경고'
     
     if num_of_warnings == 2:
@@ -95,8 +95,8 @@ async def command_game_warning(ctx, member: discord.Member = None):
     try:
         # 역할 부여
         await member.add_roles(role)
-        await ctx.send(f"{member.mention}님에게 내전 경고가 부여되었습니다.\n"
-                       f"누적 내전 경고 : {num_of_warnings}회\n"
+        await ctx.send(f"{member.mention}님에게 게임 경고가 부여되었습니다.\n"
+                       f"누적 게임 경고 : {num_of_warnings}회\n"
                        f"처분 : {punishment}")
 
     except Exception as e:
