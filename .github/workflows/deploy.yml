@@ -26,7 +26,7 @@ jobs:
         ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_IP }} << 'EOF'
           cd /home/ec2-user/lol_park_police/
         
-          git pull origin master
+          git pull origin main
         
           if ! [ -x "$(command -v docker)" ]; then
             curl -fsSL https://get.docker.com -o get-docker.sh
