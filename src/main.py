@@ -98,6 +98,18 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
+# 명령어 에러 처리
+@bot.event
+async def on_command_error(ctx, error):
+    # CommandNotFound 에러는 무시
+    if isinstance(error, commands.CommandNotFound):
+        print(f'없는 명령어입니다.')
+        pass  # 아무 작업도 하지 않음
+    else:
+        # 다른 에러는 콘솔에 출력
+        print(f"Unhandled error: {error}")
+
+
 # 메세지 삭제 시 마다 수행
 @bot.event
 async def on_message_delete(message):
