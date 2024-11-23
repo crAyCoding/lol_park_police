@@ -100,3 +100,57 @@ async def add_game_warning(member):
     finally:
         db.close()
         conn.close()
+
+
+# 서버 경고 1회 삭제
+async def remove_server_warning(member):
+    conn = sqlite3.connect(warnings_db)
+    db = conn.cursor()
+    try:
+        # server_warning 값을 1 감소
+        query = 'UPDATE summoners SET server_warning = server_warning - 1 WHERE id = ?'
+        db.execute(query, (member.id,))
+        conn.commit()
+
+        # 업데이트된 server_warning 값을 조회
+        db.execute('SELECT server_warning FROM summoners WHERE id = ?', (member.id,))
+        result = db.fetchone()
+        
+        if result:
+            return int(result[0])  # server_warning 값을 반환
+        else:
+            return None
+
+    except sqlite3.Error as e:
+        print(f"An error occurred: {e}")
+        return None
+    finally:
+        db.close()
+        conn.close()
+
+
+# 게임 경고 1회 삭제
+async def remove_game_warning(member):
+    conn = sqlite3.connect(warnings_db)
+    db = conn.cursor()
+    try:
+        # game_warning 값을 1 감소
+        query = 'UPDATE summoners SET game_warning = game_warning - 1 WHERE id = ?'
+        db.execute(query, (member.id,))
+        conn.commit()
+
+        # 업데이트된 game_warning 값을 조회
+        db.execute('SELECT game_warning FROM summoners WHERE id = ?', (member.id,))
+        result = db.fetchone()
+        
+        if result:
+            return int(result[0])  # game_warning 값을 반환
+        else:
+            return None
+
+    except sqlite3.Error as e:
+        print(f"An error occurred: {e}")
+        return None
+    finally:
+        db.close()
+        conn.close()

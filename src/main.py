@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from bot import bot
 from dotenv import load_dotenv
-from lolpark_warnings import server_warning, game_warning
+from lolpark_warnings import server_warning, game_warning, remove_server_warning, remove_game_warning
 import database
 import channels
 
@@ -99,6 +99,56 @@ async def command_game_warning(ctx, member: discord.Member = None):
                        f"누적 게임 경고 : {num_of_warnings}회\n"
                        f"처분 : {punishment}")
 
+    except Exception as e:
+        print('오류 발생')
+    return
+
+
+@bot.command(name='서버경고철회')
+@commands.has_role("관리자")
+@commands.has_permissions(manage_roles=True)
+async def command_server_warning(ctx, member: discord.Member = None):
+    await ctx.message.delete()
+
+    # 언급 멤버가 없으면 무시
+    if not member:
+        return
+    
+    # 정해진 채팅 채널이 아닌 경우 무시
+    channel_id = ctx.channel.id
+    if channel_id != channels.PUNISHMENT_CHANNEL_ID and channel_id != channels.TEST_ID:
+        return
+    
+    num_of_warnings = await remove_server_warning(ctx, member)
+
+    try:
+        await ctx.send(f"{member.mention}님의 서버 경고를 철회했습니다.\n"
+                       f"누적 서버 경고 : {num_of_warnings}회\n")
+    except Exception as e:
+        print('오류 발생')
+    return
+
+
+@bot.command(name='게임경고철회')
+@commands.has_role("관리자")
+@commands.has_permissions(manage_roles=True)
+async def command_server_warning(ctx, member: discord.Member = None):
+    await ctx.message.delete()
+
+    # 언급 멤버가 없으면 무시
+    if not member:
+        return
+    
+    # 정해진 채팅 채널이 아닌 경우 무시
+    channel_id = ctx.channel.id
+    if channel_id != channels.PUNISHMENT_CHANNEL_ID and channel_id != channels.TEST_ID:
+        return
+    
+    num_of_warnings = await remove_game_warning(ctx, member)
+
+    try:
+        await ctx.send(f"{member.mention}님의 게임 경고를 철회했습니다.\n"
+                       f"누적 게임 경고 : {num_of_warnings}회\n")
     except Exception as e:
         print('오류 발생')
     return
