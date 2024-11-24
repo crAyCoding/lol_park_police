@@ -158,7 +158,7 @@ async def remove_game_warning(member):
 
 
 # 내전 3회 이상 확인
-async def is_more_than_three_game(ctx):
+def is_more_than_three_game(ctx):
     conn = sqlite3.connect(summoners_db)
     db = conn.cursor()
 
