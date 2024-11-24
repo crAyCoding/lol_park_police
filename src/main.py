@@ -162,8 +162,6 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-
-
     await bot.process_commands(message)
 
 
@@ -198,6 +196,13 @@ async def on_member_update(before, after):
 async def shutdown(ctx):
     # 디스코드에서 봇 종료를 위한 명령어
     await ctx.send("롤파크 경찰관 퇴근합니다.")
+    await bot.close()
+
+
+@bot.command(name='테스트')
+@commands.is_owner()
+async def test_command(ctx):
+    print(database.is_more_than_three_game(ctx))
     await bot.close()
 
 

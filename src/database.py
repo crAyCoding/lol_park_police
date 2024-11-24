@@ -2,6 +2,7 @@ import sqlite3
 
 # 데이터베이스 파일 저장소
 warnings_db = '/database/warnings.db'
+summoners_db = '/database/summoners.db'
 
 # 소환사 등록
 def add_summoner(member):
@@ -152,5 +153,50 @@ async def remove_game_warning(member):
         print(f"An error occurred: {e}")
         return None
     finally:
+        db.close()
+        conn.close()
+
+
+# 내전 3회 이상 확인
+async def is_more_than_three_game(ctx):
+    conn = sqlite3.connect(summoners_db)
+    db = conn.cursor()
+
+    try:
+        pre_query = f'SELECT twenty_game_count FROM summoners WHERE id = ?'
+        # id에 따른 game_count 조회
+        db.execute(pre_query, (ctx.author.id,))
+        pre_result = db.fetchone()
+
+        print(pre_result)
+
+        if pre_result:
+            game_count = int(pre_result[0])
+            if game_count > 0:
+                return True
+
+        query = f'SELECT normal_game_count FROM summoners WHERE id = ?'
+        # id에 따른 game_count 조회
+        db.execute(query, (ctx.author.id,))
+        result = db.fetchone()
+
+        print(int(result[0]))
+
+        # 결과 확인, 내전 횟수 3 이상이면 True
+        if result:
+            game_count = int(result[0])
+            print(game_count)
+            if game_count >= 3:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    except sqlite3.Error as e:
+        print(f"An error occurred: {e}")
+        return False
+    finally:
+        # 커서 및 연결 닫기
         db.close()
         conn.close()
