@@ -163,6 +163,10 @@ def is_more_than_three_game(ctx):
     db = conn.cursor()
 
     try:
+        db.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = db.fetchall()
+        print("Tables in the database:", tables)
+
         pre_query = f'SELECT twenty_game_count FROM summoners WHERE id = ?'
         # id에 따른 game_count 조회
         db.execute(pre_query, (ctx.author.id,))
