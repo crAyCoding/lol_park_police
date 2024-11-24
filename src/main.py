@@ -203,11 +203,10 @@ async def shutdown(ctx):
 @commands.is_owner()
 async def test_command(ctx):
     print(database.is_more_than_three_game(ctx))
-    await bot.close()
 
 
 def main() -> None:
-    database.create_table()
+    # database.create_table()
     bot.run(token=TOKEN)
 
 
