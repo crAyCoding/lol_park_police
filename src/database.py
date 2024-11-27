@@ -108,6 +108,12 @@ async def remove_server_warning(member):
     conn = sqlite3.connect(warnings_db)
     db = conn.cursor()
     try:
+        pre_query = 'SELECT server_warning FROM summoners WHERE id = ?'
+        db.execute(pre_query, (member.id,))
+        pre_result = db.fetchone()
+        if int(pre_result[0]) == 0:
+            return None
+
         # server_warning 값을 1 감소
         query = 'UPDATE summoners SET server_warning = server_warning - 1 WHERE id = ?'
         db.execute(query, (member.id,))
@@ -135,6 +141,12 @@ async def remove_game_warning(member):
     conn = sqlite3.connect(warnings_db)
     db = conn.cursor()
     try:
+        pre_query = 'SELECT game_warning FROM summoners WHERE id = ?'
+        db.execute(pre_query, (member.id,))
+        pre_result = db.fetchone()
+        if int(pre_result[0]) == 0:
+            return None
+
         # game_warning 값을 1 감소
         query = 'UPDATE summoners SET game_warning = game_warning - 1 WHERE id = ?'
         db.execute(query, (member.id,))

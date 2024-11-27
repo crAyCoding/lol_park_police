@@ -121,6 +121,9 @@ async def command_server_warning(ctx, member: discord.Member = None):
     
     num_of_warnings = await remove_server_warning(ctx, member)
 
+    if not num_of_warnings:
+        return
+
     try:
         await ctx.send(f"{member.mention}님의 서버 경고를 철회했습니다.\n"
                        f"누적 서버 경고 : {num_of_warnings}회\n")
@@ -145,6 +148,9 @@ async def command_server_warning(ctx, member: discord.Member = None):
         return
     
     num_of_warnings = await remove_game_warning(ctx, member)
+    
+    if not num_of_warnings:
+        return
 
     try:
         await ctx.send(f"{member.mention}님의 게임 경고를 철회했습니다.\n"
