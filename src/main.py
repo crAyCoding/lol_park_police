@@ -5,6 +5,7 @@ from bot import bot
 from dotenv import load_dotenv
 from lolpark_warnings import server_warning, game_warning, remove_server_warning, remove_game_warning
 import database
+import asyncio
 import channels
 
 # 테스트 할때 아래 사용
@@ -82,8 +83,9 @@ async def command_game_warning(ctx, member: discord.Member = None):
         return
 
     role = discord.utils.get(ctx.guild.roles, name=f'game {num_of_warnings}')
+    game_ban_role = discord.utils.get(ctx.guild.roles, name=f'내전금지')
     # 게임경고 횟수에 따른 처분 목록
-    punishment = f'구두경고'
+    punishment = f'내전 참여금지 1일'
     
     if num_of_warnings == 2:
         punishment = f'내전 참여금지 3일, 타임아웃 1일'
@@ -95,6 +97,9 @@ async def command_game_warning(ctx, member: discord.Member = None):
     try:
         # 역할 부여
         await member.add_roles(role)
+        if num_of_warnings <= 2:
+            await member.add_roles(game_ban_role)
+            await asyncio.sleep(10)
         await ctx.send(f"{member.mention}님에게 게임 경고가 부여되었습니다.\n"
                        f"누적 게임 경고 : {num_of_warnings}회\n"
                        f"처분 : {punishment}")
