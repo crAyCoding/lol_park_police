@@ -76,6 +76,8 @@ async def command_game_warning(ctx, member: discord.Member = None):
     
     num_of_warnings = await game_warning(ctx, member)
 
+    # num_of_warnings = 1
+
     if num_of_warnings == 5:
         await ctx.send(f"{member.mention}님에게 게임 경고가 부여되었습니다.\n"
                        f"누적 게임 경고 : {num_of_warnings}회\n"
@@ -97,15 +99,16 @@ async def command_game_warning(ctx, member: discord.Member = None):
     try:
         # 역할 부여
         await member.add_roles(role)
-        if num_of_warnings <= 2:
-            await member.add_roles(game_ban_role)
-            await asyncio.sleep(10)
         await ctx.send(f"{member.mention}님에게 게임 경고가 부여되었습니다.\n"
                        f"누적 게임 경고 : {num_of_warnings}회\n"
                        f"처분 : {punishment}")
+        if num_of_warnings <= 2:
+            await member.add_roles(game_ban_role)
+            await asyncio.sleep(86400 + (num_of_warnings - 1) * 86400 * 2)
+            await member.remove_roles(game_ban_role)
 
     except Exception as e:
-        print('오류 발생')
+        print(f'오류 발생 : {e}')
     return
 
 
