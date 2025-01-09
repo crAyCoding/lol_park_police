@@ -7,6 +7,8 @@ from lolpark_warnings import server_warning, game_warning, remove_server_warning
 import database
 import asyncio
 import channels
+from functions import get_nickname_from_display_name
+
 
 # 테스트 할때 아래 사용
 load_dotenv()
@@ -16,7 +18,11 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user}')
+    try:
+        synced = await bot.tree.sync()
+        print(f"Slash commands synced: {synced} commands")
+    except Exception as e:
+        print(f"Error syncing commands: {e}")
 
 
 @bot.command(name='서버경고')
@@ -59,113 +65,77 @@ async def command_server_warning(ctx, member: discord.Member = None):
     return
 
 
-@bot.command(name='게임경고')
-@commands.has_role("관리자")
-@commands.has_permissions(manage_roles=True)
-async def command_game_warning(ctx, member: discord.Member = None):
-    await ctx.message.delete()
+@bot.command(name='경고검색')
+async def find_warning(ctx):
+    guild = ctx.guild
+    game_1 = discord.utils.get(guild.roles, name='game 1')
+    game_2 = discord.utils.get(guild.roles, name='game 2')
+    game_3 = discord.utils.get(guild.roles, name='game 3')
+    game_4 = discord.utils.get(guild.roles, name='game 4')
+    server_1 = discord.utils.get(guild.roles, name='server 1')
+    server_2 = discord.utils.get(guild.roles, name='server 2')
 
-    # 언급 멤버가 없으면 무시
-    if not member:
-        return
+    members_with_game_1 = [member for member in guild.members if game_1 in member.roles]
+
+    if not members_with_game_1:
+        await ctx.send(f"'{game_1}' 역할을 가진 멤버가 없습니다.")
+    else:
+        
+        # 멤버 이름 출력
+        member_names = "\n".join(get_nickname_from_display_name(member.display_name) for member in members_with_game_1)
+        await ctx.send(f"게임경고 1회 이상 부여받은 멤버 목록입니다.\n{member_names}")
+
+
+class WarningModal(discord.ui.Modal):
+    def __init__(self, user):
+        super().__init__(title="유저 메시지 작성")
+        self.user = user
+
+        # 메시지 입력 필드
+        self.message = discord.ui.TextInput(label="메시지", placeholder="유저에게 보낼 메시지를 입력하세요...")
+        self.add_item(self.message)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        # 메시지 제출 시 실행
+        await interaction.response.send_message(
+            f"**닉네임:** {self.user.display_name}\n**메시지:** {self.message.value}",
+            ephemeral=True
+        )
+
+
+# 자동완성 핸들러
+@bot.tree.command(name="경고", description="유저 닉네임을 검색하고 경고를 부여하세요.")
+@discord.app_commands.describe(query="검색할 닉네임의 일부를 입력하세요")
+async def user_search(interaction: discord.Interaction, query: str):
+
+    guild = interaction.guild
+    user = discord.utils.find(lambda m: query.lower() in m.display_name.lower(), guild.members)
+
+    if user is None:
+        await interaction.response.send_message(f"'{query}'에 해당하는 사용자를 찾을 수 없습니다.", ephemeral=True)
+    else:
+        # Modal 열기
+        modal = WarningModal(user)
+        await interaction.response.send_modal(modal)
+
+
+
+# 자동완성 함수
+@user_search.autocomplete("query")
+async def user_search_autocomplete(interaction: discord.Interaction, current: str):
+    guild = interaction.guild
+    if not guild:
+        return []
     
-    # 정해진 채팅 채널이 아닌 경우 무시
-    channel_id = ctx.channel.id
-    if channel_id != channels.PUNISHMENT_CHANNEL_ID and channel_id != channels.TEST_ID:
-        return
-    
-    num_of_warnings = await game_warning(ctx, member)
+    # 현재 입력된 내용(current)을 포함하는 멤버 닉네임 리스트 생성
+    matches = [
+        discord.app_commands.Choice(name=member.display_name, value=member.display_name)
+        for member in guild.members
+        if current.lower() in member.display_name.lower()
+    ]
 
-    # num_of_warnings = 1
-
-    if num_of_warnings == 5:
-        await ctx.send(f"{member.mention}님에게 게임 경고가 부여되었습니다.\n"
-                       f"누적 게임 경고 : {num_of_warnings}회\n"
-                       f"처분 : 서버 추방 및 재입장 불가")
-        return
-
-    role = discord.utils.get(ctx.guild.roles, name=f'game {num_of_warnings}')
-    game_ban_role = discord.utils.get(ctx.guild.roles, name=f'내전금지')
-    # 게임경고 횟수에 따른 처분 목록
-    punishment = f'내전 참여금지 1일'
-    
-    if num_of_warnings == 2:
-        punishment = f'내전 참여금지 3일, 타임아웃 1일'
-    if num_of_warnings == 3:
-        punishment = f'타임아웃 7일'
-    if num_of_warnings == 4:
-        punishment = f'타임아웃 14일'
-
-    try:
-        # 역할 부여
-        await member.add_roles(role)
-        await ctx.send(f"{member.mention}님에게 게임 경고가 부여되었습니다.\n"
-                       f"누적 게임 경고 : {num_of_warnings}회\n"
-                       f"처분 : {punishment}")
-        if num_of_warnings <= 2:
-            await member.add_roles(game_ban_role)
-            await asyncio.sleep(86400 + (num_of_warnings - 1) * 86400 * 2)
-            await member.remove_roles(game_ban_role)
-
-    except Exception as e:
-        print(f'오류 발생 : {e}')
-    return
-
-
-@bot.command(name='서버경고철회')
-@commands.has_role("관리자")
-@commands.has_permissions(manage_roles=True)
-async def command_server_warning(ctx, member: discord.Member = None):
-    await ctx.message.delete()
-
-    # 언급 멤버가 없으면 무시
-    if not member:
-        return
-    
-    # 정해진 채팅 채널이 아닌 경우 무시
-    channel_id = ctx.channel.id
-    if channel_id != channels.PUNISHMENT_CHANNEL_ID and channel_id != channels.TEST_ID:
-        return
-    
-    num_of_warnings = await remove_server_warning(ctx, member)
-
-    if not num_of_warnings:
-        return
-
-    try:
-        await ctx.send(f"{member.mention}님의 서버 경고를 철회했습니다.\n"
-                       f"누적 서버 경고 : {num_of_warnings}회\n")
-    except Exception as e:
-        print('오류 발생')
-    return
-
-
-@bot.command(name='게임경고철회')
-@commands.has_role("관리자")
-@commands.has_permissions(manage_roles=True)
-async def command_server_warning(ctx, member: discord.Member = None):
-    await ctx.message.delete()
-
-    # 언급 멤버가 없으면 무시
-    if not member:
-        return
-    
-    # 정해진 채팅 채널이 아닌 경우 무시
-    channel_id = ctx.channel.id
-    if channel_id != channels.PUNISHMENT_CHANNEL_ID and channel_id != channels.TEST_ID:
-        return
-    
-    num_of_warnings = await remove_game_warning(ctx, member)
-    
-    if not num_of_warnings:
-        return
-
-    try:
-        await ctx.send(f"{member.mention}님의 게임 경고를 철회했습니다.\n"
-                       f"누적 게임 경고 : {num_of_warnings}회\n")
-    except Exception as e:
-        print('오류 발생')
-    return
+    # 최대 25개의 결과만 반환 (Discord 제한)
+    return matches[:25]
 
 
 # 메세지 입력 시 마다 수행
